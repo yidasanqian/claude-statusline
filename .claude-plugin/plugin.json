@@ -1,0 +1,13 @@
+{
+  "name": "claude-statusline",
+  "version": "0.1.0",
+  "description": "A two-line status bar for Claude Code showing model, context usage, cache hit rate, git status, MCP and Skills count. Cross-platform (Windows Git Bash + Linux/Unix).",
+  "author": {
+    "name": "yidasanqian",
+    "url": "https://github.com/yidasanqian"
+  },
+  "homepage": "https://github.com/yidasanqian/claude-statusline",
+  "repository": "https://github.com/yidasanqian/claude-statusline",
+  "license": "MIT",
+  "keywords": ["statusline", "statusbar", "status", "git", "context", "mcp"]
+}
