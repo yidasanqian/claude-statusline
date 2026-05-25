@@ -1,0 +1,16 @@
+{
+  "name": "claude-statusline",
+  "owner": {
+    "name": "yidasanqian",
+    "url": "https://github.com/yidasanqian"
+  },
+  "plugins": [
+    {
+      "name": "claude-statusline",
+      "description": "A two-line status bar for Claude Code showing model, context usage, cache hit rate, git status, MCP and Skills count. Cross-platform (Windows Git Bash + Linux/Unix).",
+      "category": "productivity",
+      "source": ".",
+      "homepage": "https://github.com/yidasanqian/claude-statusline"
+    }
+  ]
+}

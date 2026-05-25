@@ -34,14 +34,32 @@ winget install jqlang.jq
 
 ## Installation
 
-### Via Claude Code Marketplace
+### Via Claude Code (recommended)
 
-Search for `claude-statusline` in the Claude Code plugin marketplace and click Install.
+**Step 1** — Add the marketplace:
 
-### Manual Installation
+```
+/plugin marketplace add yidasanqian/claude-statusline
+```
+
+**Step 2** — Install the plugin:
+
+```
+/plugin install claude-statusline@claude-statusline
+```
+
+Or with the CLI (non-interactive):
 
 ```bash
-cc plugin install https://github.com/yidasanqian/claude-statusline
+claude plugin marketplace add yidasanqian/claude-statusline
+claude plugin install claude-statusline@claude-statusline
+```
+
+### Manual Installation (Git Clone)
+
+```bash
+git clone https://github.com/yidasanqian/claude-statusline \
+  ~/.claude/plugins/cache/yidasanqian/claude-statusline
 ```
 
 ### After Installing
