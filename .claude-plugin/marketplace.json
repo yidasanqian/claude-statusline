@@ -9,7 +9,8 @@
       "name": "claude-statusline",
       "description": "A two-line status bar for Claude Code showing model, context usage, cache hit rate, git status, MCP and Skills count. Cross-platform (Windows Git Bash + Linux/Unix).",
       "category": "productivity",
-      "source": "url",
+      "version": "1.0.0",
+      "source": "./",
       "homepage": "https://github.com/yidasanqian/claude-statusline"
     }
   ]
