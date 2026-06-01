@@ -74,6 +74,7 @@ Add the `statusLine` field to `~/.claude/settings.json`:
 ```json
 {
   "statusLine": {
+    "type": "command",
     "command": "~/.claude/plugins/cache/yidasanqian/claude-statusline/scripts/statusline-command.sh"
   }
 }
@@ -83,6 +84,7 @@ Add the `statusLine` field to `~/.claude/settings.json`:
 ```json
 {
   "statusLine": {
+    "type": "command",
     "command": "C:/Users/yourname/.claude/plugins/cache/yidasanqian/claude-statusline/scripts/statusline-command.sh"
   }
 }
