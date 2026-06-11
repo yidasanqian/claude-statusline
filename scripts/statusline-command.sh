@@ -25,7 +25,7 @@ used=$(awk "BEGIN{printf \"%.0f\", $inp+$out+$cc+$cr}")
 transcript=$(echo "$input" | jq -r '.transcript_path // empty')
 msg_count=""
 if [ -n "$transcript" ] && [ -f "$transcript" ]; then
-  count=$(grep -c '"role"' "$transcript" 2>/dev/null || echo 0)
+  count=$(grep -c '"type":"user"\|"type":"assistant"' "$transcript" 2>/dev/null || echo 0)
   [ "$count" -gt 0 ] && msg_count="💬 ${count}"
 fi
 
