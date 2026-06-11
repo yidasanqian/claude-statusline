@@ -21,6 +21,14 @@ cr=$(echo "$input" | jq -r '.context_window.current_usage.cache_read_input_token
 
 used=$(awk "BEGIN{printf \"%.0f\", $inp+$out+$cc+$cr}")
 
+# Message count from transcript (user + assistant roles)
+transcript=$(echo "$input" | jq -r '.transcript_path // empty')
+msg_count=""
+if [ -n "$transcript" ] && [ -f "$transcript" ]; then
+  count=$(grep -c '"role"' "$transcript" 2>/dev/null || echo 0)
+  [ "$count" -gt 0 ] && msg_count="💬 ${count}"
+fi
+
 # Git branch (needed for line 1 and line 2)
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
 branch=""
@@ -61,7 +69,7 @@ fi
 
 # Assemble line 1 — two spaces between groups, skip empty parts
 line1=""
-for part in "$modelstr" "$thinkstr" "$ctxstr" "$hitstr"; do
+for part in "$modelstr" "$thinkstr" "$ctxstr" "$hitstr" "$msg_count"; do
   [ -z "$part" ] && continue
   [ -z "$line1" ] && line1="$part" || line1="${line1}  ${part}"
 done
