@@ -14,12 +14,27 @@ effort=$(echo "$input" | jq -r '.effort.level // empty')
 thinking=$(echo "$input" | jq -r '.thinking.enabled // false')
 pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 cws=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
-inp=$(echo "$input" | jq -r '.context_window.current_usage.input_tokens // 0')
-out=$(echo "$input" | jq -r '.context_window.current_usage.output_tokens // 0')
+# Context-window totals reflect live context for all models.
+# current_usage is only the last API call and is often null/0 for non-Claude models.
+inp=$(echo "$input" | jq -r '.context_window.total_input_tokens // 0')
+out=$(echo "$input" | jq -r '.context_window.total_output_tokens // 0')
+
+# Keep last-call values for cache-hit calculation.
+inp_call=$(echo "$input" | jq -r '.context_window.current_usage.input_tokens // 0')
 cc=$(echo "$input" | jq -r '.context_window.current_usage.cache_creation_input_tokens // 0')
 cr=$(echo "$input" | jq -r '.context_window.current_usage.cache_read_input_tokens // 0')
 
-used=$(awk "BEGIN{printf \"%.0f\", $inp+$out+$cc+$cr}")
+used=$(awk "BEGIN{printf \"%.0f\", $inp+$out}")
+
+# If Claude Code didn't supply a percentage (common for non-Claude models) or it
+# disagrees with the token totals, calculate it ourselves.
+if [ -z "$pct" ] || [ "$pct" = "null" ]; then
+  if [ "$cws" -gt 0 ] 2>/dev/null && [ "$used" -gt 0 ]; then
+    pct=$(awk "BEGIN{printf \"%.2f\", $used/$cws*100}")
+  fi
+elif awk "BEGIN{exit !($pct == 0 && $used > 0 && $cws > 0)}" 2>/dev/null; then
+  pct=$(awk "BEGIN{printf \"%.2f\", $used/$cws*100}")
+fi
 
 # Message count from transcript (user + assistant roles)
 transcript=$(echo "$input" | jq -r '.transcript_path // empty')
@@ -61,7 +76,7 @@ fi
 
 # Cache hit rate (1 decimal)
 hitstr=""
-denom=$(awk "BEGIN{print $inp+$cc+$cr}")
+denom=$(awk "BEGIN{print $inp_call+$cc+$cr}")
 if awk "BEGIN{exit !($cr > 0)}"; then
   hitp=$(awk "BEGIN{printf \"%.1f\", $cr/($denom)*100}")
   hitstr="🎯 ${hitp}%"
