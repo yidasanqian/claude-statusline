@@ -14,6 +14,7 @@ effort=$(echo "$input" | jq -r '.effort.level // empty')
 thinking=$(echo "$input" | jq -r '.thinking.enabled // false')
 pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 cws=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
+
 # Context-window totals reflect live context for all models.
 # current_usage is only the last API call and is often null/0 for non-Claude models.
 inp=$(echo "$input" | jq -r '.context_window.total_input_tokens // 0')
@@ -44,6 +45,41 @@ if [ -n "$transcript" ] && [ -f "$transcript" ]; then
   [ "$count" -gt 0 ] && msg_count="💬 ${count}"
 fi
 
+# Fallback for non-Claude models: infer context_window_size from model name
+# e.g. glm-5.2[1M] -> 1000000, foo[200K] -> 200000
+if [ -z "$cws" ] || [ "$cws" = "null" ] || ! [ "$cws" -gt 0 ] 2>/dev/null; then
+  size_hint=$(echo "$model" | sed -n 's/.*\[\([0-9]*[KM]\)\].*/\1/p')
+  if [ -n "$size_hint" ]; then
+    num=$(echo "$size_hint" | sed 's/[KM]$//')
+    unit=$(echo "$size_hint" | sed 's/^[0-9]*//')
+    if [ "$unit" = "M" ]; then
+      cws=$((num * 1000000))
+    else
+      cws=$((num * 1000))
+    fi
+  else
+    cws=262144
+  fi
+fi
+
+# Fallback for non-Claude models: parse transcript for usage when context_window tokens are 0
+if [ "$used" -eq 0 ] && [ -n "$transcript" ] && [ -f "$transcript" ]; then
+  last_usage=$(jq -c 'select(.type == "assistant" and .message.usage != null) | .message.usage' "$transcript" 2>/dev/null | tail -1)
+  if [ -n "$last_usage" ]; then
+    t_inp=$(echo "$last_usage" | jq -r '.input_tokens // 0')
+    t_out=$(echo "$last_usage" | jq -r '.output_tokens // 0')
+    t_cc=$(echo "$last_usage" | jq -r '.cache_creation_input_tokens // 0')
+    t_cr=$(echo "$last_usage" | jq -r '.cache_read_input_tokens // 0')
+    used=$(awk "BEGIN{printf \"%.0f\", $t_inp+$t_out+$t_cc+$t_cr}")
+    inp_call=$t_inp
+    cc=$t_cc
+    cr=$t_cr
+    if [ "$cws" -gt 0 ] 2>/dev/null && [ "$used" -gt 0 ]; then
+      pct=$(awk "BEGIN{printf \"%.2f\", $used/$cws*100}")
+    fi
+  fi
+fi
+
 # Git branch (needed for line 1 and line 2)
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
 branch=""
@@ -53,8 +89,22 @@ fi
 
 # Line 1: 🤖 model  [🧠]  [██░░░░░░░░] pct% · used/total  🎯 cache%
 
-# Model with robot icon
+# Effort level (when present)
+effortstr=""
+if [ -n "$effort" ] && [ "$effort" != "null" ]; then
+  case "$effort" in
+    low)    effortstr="⚡low" ;;
+    medium) effortstr="⚡med" ;;
+    high)   effortstr="⚡high" ;;
+    xhigh)  effortstr="⚡xhigh" ;;
+    max)    effortstr="⚡max" ;;
+    *)      effortstr="⚡${effort}" ;;
+  esac
+fi
+
+# Model with robot icon, effort attached directly (no spaces)
 modelstr="🤖 ${model}"
+[ -n "$effortstr" ] && modelstr="${modelstr}${effortstr}"
 
 # Thinking flag (only when enabled)
 thinkstr=""
